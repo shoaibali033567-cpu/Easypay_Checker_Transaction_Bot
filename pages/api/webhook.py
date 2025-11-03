@@ -25,7 +25,7 @@ def check_transaction(order_id):
         if status == "PAID" and settlement == "SETTLED":
             return "✅ Transaction Successful and Settled."
         elif status == "FAILED":
-            return "❌ Transaction Failed."
+            return "❌ Transaction Failed, I’ll let you know when Transaction Settled"
         elif desc == "SUCCESS":
             return "✅ Transaction Successful."
         else:
