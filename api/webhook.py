@@ -1,26 +1,19 @@
 import os
-import asyncio
 import requests
 from flask import Flask, request, jsonify
-from telegram import Update
-from telegram.ext import Application, MessageHandler, ContextTypes, filters
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
+TELEGRAM_API = f"https://api.telegram.org/bot{BOT_TOKEN}"
 
-# Flask server
 app = Flask(__name__)
 
-# Create PTB application (but do NOT call run_polling)
-application = Application.builder().token(BOT_TOKEN).build()
-
-
-async def check_transaction(order_id: str) -> str:
+def check_transaction(order_id):
     """Check payment status."""
     try:
         response = requests.get(
             "https://naspropvt.vercel.app/inquire-easypay",
             params={"order_id": order_id},
-            timeout=10
+            timeout=10,
         )
         data = response.text.lower()
         if "paid" in data and "settled" in data:
@@ -32,33 +25,28 @@ async def check_transaction(order_id: str) -> str:
     except Exception as e:
         return f"⚠️ Error checking transaction: {e}"
 
-
-async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Handle text messages."""
-    text = update.message.text.strip()
-    if text.isdigit():
-        await update.message.reply_text("Okay, checking...")
-        result = await check_transaction(text)
-        await update.message.reply_text(result)
-    else:
-        await update.message.reply_text("Please send your order ID (numbers only).")
-
-
-# Add handler
-application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-
-
 @app.route("/api/webhook", methods=["POST"])
 def webhook():
-    """Handle incoming webhook requests from Telegram."""
     try:
-        update_data = request.get_json(force=True)
-        update = Update.de_json(update_data, application.bot)
+        data = request.get_json(force=True)
+        message = data.get("message", {})
+        chat_id = message.get("chat", {}).get("id")
+        text = message.get("text", "").strip()
 
-        # Run PTB update processing asynchronously
-        asyncio.run(application.process_update(update))
+        if not chat_id:
+            return jsonify({"ok": True})  # nothing to do
 
-        return jsonify({"status": "ok"}), 200
+        if text.isdigit():
+            requests.post(f"{TELEGRAM_API}/sendMessage",
+                          json={"chat_id": chat_id, "text": "Okay, checking..."})
+            result = check_transaction(text)
+            requests.post(f"{TELEGRAM_API}/sendMessage",
+                          json={"chat_id": chat_id, "text": result})
+        else:
+            requests.post(f"{TELEGRAM_API}/sendMessage",
+                          json={"chat_id": chat_id, "text": "Please send your order ID (numbers only)."})
+
+        return jsonify({"ok": True})
     except Exception as e:
         print("Webhook error:", e)
         return jsonify({"error": str(e)}), 500
