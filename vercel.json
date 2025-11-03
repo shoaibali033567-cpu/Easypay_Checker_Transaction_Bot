@@ -1,14 +1,11 @@
 {
   "builds": [
-    {
-      "src": "api/webhook.py",
-      "use": "@vercel/python"
-    }
+    { "src": "pages/api/webhook.py", "use": "@vercel/python" },
+    { "src": "pages/api/inquire-easypay.py", "use": "@vercel/python" }
   ],
   "routes": [
-    {
-      "src": "/api/webhook",
-      "dest": "api/webhook.py"
-    }
+    { "src": "/api/webhook", "dest": "pages/api/webhook.py" },
+    { "src": "/api/inquire-easypay", "dest": "pages/api/inquire-easypay.py" },
+    { "src": "/", "dest": "pages/index.html" }
   ]
 }
