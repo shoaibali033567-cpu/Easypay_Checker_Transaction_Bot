@@ -11,23 +11,23 @@ app = Flask(__name__)
 def check_transaction(order_id):
     """Check payment status."""
     try:
-        response = requests.get(
-    "https://easypay-checker-transaction-bot.vercel.app/api/inquire-easypay",
-    params={"order_id": order_id},
-    timeout=10,
-)
-        data = response.json()  # parse JSON properly
+        response = requests.post(
+            "https://naspropvt.vercel.app/api/easypay/inquire",
+            json={"orderId": order_id},  # must match frontend payload
+            timeout=10,
+        )
+        data = response.json()
 
         status = data.get("transactionStatus", "").upper()
         settlement = data.get("settlementStatus", "").upper()
         desc = data.get("responseDesc", "").upper()
 
         if status == "PAID" and settlement == "SETTLED":
-            return "✅ Transaction paid and already settled."
+            return "✅ Transaction Successful and Settled."
         elif status == "FAILED":
-            return "❌ Transaction failed, I’ll let you know when it’s settled."
+            return "❌ Transaction Failed."
         elif desc == "SUCCESS":
-            return "✅ Transaction successful and processed."
+            return "✅ Transaction Successful."
         else:
             return "ℹ️ Couldn’t determine the status. Please check the order ID again."
     except Exception as e:
