@@ -16,11 +16,18 @@ def check_transaction(order_id):
             params={"order_id": order_id},
             timeout=10,
         )
-        data = response.text.lower()
-        if "paid" in data and "settled" in data:
+        data = response.json()  # parse JSON properly
+
+        status = data.get("transactionStatus", "").upper()
+        settlement = data.get("settlementStatus", "").upper()
+        desc = data.get("responseDesc", "").upper()
+
+        if status == "PAID" and settlement == "SETTLED":
             return "✅ Transaction paid and already settled."
-        elif "failed" in data:
+        elif status == "FAILED":
             return "❌ Transaction failed, I’ll let you know when it’s settled."
+        elif desc == "SUCCESS":
+            return "✅ Transaction successful and processed."
         else:
             return "ℹ️ Couldn’t determine the status. Please check the order ID again."
     except Exception as e:
