@@ -36,7 +36,8 @@ def webhook():
         if not chat_id:
             return jsonify({"ok": True})  # nothing to do
 
-        if text.isdigit():
+        if re.match(r"^[A-Za-z0-9]+$", text):
+
             requests.post(f"{TELEGRAM_API}/sendMessage",
                           json={"chat_id": chat_id, "text": "Okay, checking..."})
             result = check_transaction(text)
