@@ -12,10 +12,10 @@ def check_transaction(order_id):
     """Check payment status."""
     try:
         response = requests.get(
-            "https://naspropvt.vercel.app/inquire-easypay",
-            params={"order_id": order_id},
-            timeout=10,
-        )
+    "https://easypay-checker-transaction-bot.vercel.app/api/inquire-easypay",
+    params={"order_id": order_id},
+    timeout=10,
+)
         data = response.json()  # parse JSON properly
 
         status = data.get("transactionStatus", "").upper()
